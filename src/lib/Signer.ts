@@ -6,7 +6,6 @@
  */
 
 import { DeployUtil, PublicKey } from ".";
-import { Deploy } from "./DeployUtil";
 
 /**
  * Check whether CasperLabs Signer extension is connected
@@ -52,9 +51,9 @@ export const getActivePublicKey: () => Promise<PublicKey> = () => {
  * @throws Error if publicKey is not the same as the key that Signer used to sign the message.
  */
 export const sign: (
-  deploy: Deploy,
+  deploy: DeployUtil.Deploy,
   publicKey: PublicKey
-) => Promise<string> = (deploy: Deploy, publicKey: PublicKey) => {
+) => Promise<string> = (deploy: DeployUtil.Deploy, publicKey: PublicKey) => {
   return window.casperlabsHelper!.sign(
     DeployUtil.deployToJson(deploy),
     publicKey.toAccountHex()
