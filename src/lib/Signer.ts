@@ -5,6 +5,9 @@
  * @packageDocumentation
  */
 
+import { DeployUtil, PublicKey } from ".";
+import { Deploy } from "./DeployUtil";
+
 /**
  * Check whether CasperLabs Signer extension is connected
  */
@@ -33,24 +36,29 @@ export const getSelectedPublicKeyBase64: () => Promise<string> = () => {
  *
  * @returns {string} Hex-encoded public key with algorithm prefix.
  */
-export const getActivePublicKey: () => Promise<string> = () => {
-  return window.casperlabsHelper!.getActivePublicKey();
+export const getActivePublicKey: () => Promise<PublicKey> = () => {
+  return window.casperlabsHelper!.getActivePublicKey().then(publicKeyHex => {
+    return PublicKey.fromHex(publicKeyHex);
+  });
 };
 
 /**
- * send base16 encoded message to plugin to sign
+ * Send deploy to plugin to sign.
  *
- * @param messageBase16 the base16 encoded message that plugin received to sign
- * @param publicKeyBase64 the base64 encoded public key used to sign the deploy, if set, we will check whether it is the same as the active key for signing the message, otherwise, we won't check.
+ * @param deploy the deploy that plugin received to sign.
+ * @param publicKey the public key used to sign the deploy, if set, we will check whether it is the same as the active key for signing the message.
  *
  * @throws Error if haven't connected to CasperLabs Signer browser extension.
- * @throws Error if publicKeyBase64 is not the same as the key that Signer used to sign the message
+ * @throws Error if publicKey is not the same as the key that Signer used to sign the message.
  */
 export const sign: (
-  messageBase16: string,
-  publicKeyBase64?: string
-) => Promise<string> = (messageBase16: string, publicKeyBase64?: string) => {
-  return window.casperlabsHelper!.sign(messageBase16, publicKeyBase64);
+  deploy: Deploy,
+  publicKey: PublicKey
+) => Promise<string> = (deploy: Deploy, publicKey: PublicKey) => {
+  return window.casperlabsHelper!.sign(
+    DeployUtil.deployToJson(deploy),
+    publicKey.toAccountHex()
+  );
 };
 
 /*
