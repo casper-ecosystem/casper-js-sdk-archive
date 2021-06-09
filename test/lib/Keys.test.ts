@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { decodeBase16, decodeBase64, encodeBase16 } from '../../src';
+import { decodeBase16, decodeBase64, DeployUtil, encodeBase16 } from '../../src';
 import { Ed25519, Secp256K1 } from '../../src/lib/Keys';
 import { byteHash } from '../../src/lib/Contracts';
 import * as nacl from 'tweetnacl-ts';
@@ -9,6 +9,7 @@ import * as fs from 'fs';
 import * as Crypto from 'crypto';
 import * as path from 'path';
 import * as os from 'os';
+import { CasperHDKey } from '../../src/lib/CasperHDKey';
 
 describe('Ed25519', () => {
   it('calculates the account hash', () => {
@@ -168,5 +169,165 @@ describe('Secp256K1', () => {
     const signature = signKeyPair.sign(Buffer.from(message));
     // expect we could verify the signature created by ourself
     expect(signKeyPair.verify(signature, message)).to.equal(true);
+  });
+
+  it('Test Ledger vector 1', () => {
+    let seed = Buffer.from("ed2f664e65b5ef0dd907ae15a2788cfc98e41970bc9fcb46f5900f6919862075e721f37212304a56505dab99b001cc8907ef093b7c5016a46b50c01cc3ec1cac", "hex");
+    let master = CasperHDKey.fromMasterSeed(seed);
+    let keyPair = master.deriveIndex(0);
+
+    let json = {
+      "deploy": {
+        "hash": "a155d0bc8ae2089079b3dd155e1d6597a4a705bca3154aaafcf28fc693e40a31",
+        "header": {
+          "account": "02028b2ddbe59976ad2f4138ca46553866de5124d13db4e13611ca751eedde9e0297",
+          "timestamp": "2021-06-08T13:40:22.846Z",
+          "ttl": "30m",
+          "gas_price": 1,
+          "body_hash": "f7859590eee1a88b04ec76ecf17e24093df4a8bea6ce247bac5a965cee6d9bca",
+          "dependencies": [],
+          "chain_name": "casper-test"
+        },
+        "payment": {
+          "ModuleBytes": {
+            "module_bytes": "",
+            "args": [
+              ["amount", {
+                "cl_type": "U512",
+                "bytes": "0600a0724e1809",
+                "parsed": "null"
+              }]
+            ]
+          }
+        },
+        "session": {
+          "Transfer": {
+            "args": [
+              ["amount", {
+                "cl_type": "U512",
+                "bytes": "0500f2052a01",
+                "parsed": "null"
+              }],
+              ["target", {
+                "cl_type": {
+                  "ByteArray": 32
+                },
+                "bytes": "e5d30118dc4e254d29250296f0cbcfbae17263a3c7f745b55aabee62f5f06eb1",
+                "parsed": "null"
+              }],
+              ["id", {
+                "cl_type": {
+                  "Option": "U64"
+                },
+                "bytes": "013930000000000000",
+                "parsed": "null"
+              }]
+            ]
+          }
+        },
+        "approvals": []
+      }
+    };
+
+    let expected = {
+      "signer": "02028b2ddbe59976ad2f4138ca46553866de5124d13db4e13611ca751eedde9e0297",
+      "signature": "02748582748c3082a522f8660e88f25634a9889cf9175b35a02428534005f188f61f491479210fd61a952b647a406709b331c996b2c27336ce0cb8f66d7ea063ec"
+    };
+
+    let deploy = DeployUtil.deployFromJson(json)!;
+
+    let signed_deploy = DeployUtil.signDeploy(deploy, keyPair);
+    
+    let signer = signed_deploy.approvals[0].signer;
+    expect(signer).to.equal(expected.signer);
+    
+    let signature = signed_deploy.approvals[0].signature;
+    expect(signature).to.equal(expected.signature);
+  });
+
+  it('Test Ledger vector 2', () => {
+    let seed = Buffer.from("ed2f664e65b5ef0dd907ae15a2788cfc98e41970bc9fcb46f5900f6919862075e721f37212304a56505dab99b001cc8907ef093b7c5016a46b50c01cc3ec1cac", "hex");
+    let master = CasperHDKey.fromMasterSeed(seed);
+    let keyPair = master.deriveIndex(0);
+
+    let json = {
+        "deploy": {
+          "hash": "2682bd51fc51c3295ff0ba9bb07d055d39aa895bbf88a25c26d87b219ade1b6d",
+          "header": {
+            "account": "02028b2ddbe59976ad2f4138ca46553866de5124d13db4e13611ca751eedde9e0297",
+            "timestamp": "2021-06-09T09:50:47.135Z",
+            "ttl": "30m",
+            "gas_price": 1,
+            "body_hash": "f7859590eee1a88b04ec76ecf17e24093df4a8bea6ce247bac5a965cee6d9bca",
+            "dependencies": [],
+            "chain_name": "casper-test"
+          },
+          "payment": {
+            "ModuleBytes": {
+              "module_bytes": "",
+              "args": [
+                [
+                  "amount",
+                  {
+                    "cl_type": "U512",
+                    "bytes": "0600a0724e1809",
+                    "parsed": "null"
+                  }
+                ]
+              ]
+            }
+          },
+          "session": {
+            "Transfer": {
+              "args": [
+                [
+                  "amount",
+                  {
+                    "cl_type": "U512",
+                    "bytes": "0500f2052a01",
+                    "parsed": "null"
+                  }
+                ],
+                [
+                  "target",
+                  {
+                    "cl_type": {
+                      "ByteArray": 32
+                    },
+                    "bytes": "e5d30118dc4e254d29250296f0cbcfbae17263a3c7f745b55aabee62f5f06eb1",
+                    "parsed": "null"
+                  }
+                ],
+                [
+                  "id",
+                  {
+                    "cl_type": {
+                      "Option": "U64"
+                    },
+                    "bytes": "013930000000000000",
+                    "parsed": "null"
+                  }
+                ]
+              ]
+            }
+          },
+          "approvals": []
+        }
+    };
+
+    let expected = {
+      "signer": "02028b2ddbe59976ad2f4138ca46553866de5124d13db4e13611ca751eedde9e0297",
+      "signature": "025e4d63590cd77d612bbda45af01a98553e02809d89117460a8411f0cd85490c62a9ec853fffdf9f714f472a7c0f60a91f97960d4de81841d9cc482ea676a9b22"
+    };
+
+    let deploy = DeployUtil.deployFromJson(json)!;
+
+    let signed_deploy = DeployUtil.signDeploy(deploy, keyPair);
+    
+    let signer = signed_deploy.approvals[0].signer;
+    expect(signer).to.equal(expected.signer);
+    
+    let signature = signed_deploy.approvals[0].signature;
+    expect(signature).to.equal(expected.signature);
   });
 });
