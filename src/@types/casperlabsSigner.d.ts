@@ -8,12 +8,12 @@ interface CasperLabsHelper {
    * Returns connection status from Signer
    */
   isConnected: () => Promise<boolean>;
-  
+
   /**
    * Attempt connection to Signer
    */
   requestConnection: () => void;
-  
+
   /**
    * Send Deploy in JSON format message to Signer plugin to sign.
    *
